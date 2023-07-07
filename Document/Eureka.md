@@ -64,142 +64,154 @@
 
 接着我们来稍微写一点业务 比如用户信息查询业务 我们先把数据库相关的依赖进行导入 这里依然使用Mybatis框架 首先在父项目中添加MySQL驱动和Lombok依赖:
 
-                    <dependency>
-                        <groupId>mysql</groupId>
-                        <artifactId>mysql-connector-java</artifactId>
-                    </dependency>
-                    
-                    <dependency>
-                         <groupId>org.projectlombok</groupId>
-                         <artifactId>lombok</artifactId>
-                    </dependency>
+```xml
+                <dependency>
+                    <groupId>mysql</groupId>
+                    <artifactId>mysql-connector-java</artifactId>
+                </dependency>
+                
+                <dependency>
+                     <groupId>org.projectlombok</groupId>
+                     <artifactId>lombok</artifactId>
+                </dependency>
+```
 
 由于不是所有的子项目都需要用到Mybatis 我们在父项目中只进行版本管理即可:
 
-                    <dependencyManagement>
-                        <dependencies>
-                            <dependency>
-                                <groupId>org.mybatis.spring.boot</groupId>
-                                <artifactId>mybatis-spring-boot-starter</artifactId>
-                                <version>2.2.0</version>
-                            </dependency>
-                        </dependencies>
-                    </dependencyManagement>
+```xml
+                <dependencyManagement>
+                    <dependencies>
+                        <dependency>
+                            <groupId>org.mybatis.spring.boot</groupId>
+                            <artifactId>mybatis-spring-boot-starter</artifactId>
+                            <version>2.2.0</version>
+                        </dependency>
+                    </dependencies>
+                </dependencyManagement>
+```
 
 接着我们就可以在用户服务子项目中添加此依赖了:
 
-                    <dependency>
-                        <groupId>org.mybatis.spring.boot</groupId>
-                        <artifactId>mybatis-spring-boot-starter</artifactId>
-                    </dependency>
+```xml
+                <dependency>
+                    <groupId>org.mybatis.spring.boot</groupId>
+                    <artifactId>mybatis-spring-boot-starter</artifactId>
+                </dependency>
+```
 
 接着添加数据源信息(这里用到是阿里云的MySQL云数据库 各位注意修改一下数据库地址):
 
-                    spring:
-                        datasource:
-                            driver-class-name: com.mysql.cj.jdbc.Driver
-                            url: jdbc:mysql://cloudstudy.mysql.cn-chengdu.rds.aliyuncs.com:3306/cloudstudy
-                            username: test
-                            password: 123456
+```yaml
+                spring:
+                    datasource:
+                        driver-class-name: com.mysql.cj.jdbc.Driver
+                        url: jdbc:mysql://cloudstudy.mysql.cn-chengdu.rds.aliyuncs.com:3306/cloudstudy
+                        username: test
+                        password: 123456
+```
 
 接着我们来写用户查询相关的业务:
 
-                    @Data
-                    public class User {
+```java
+                @Data
+                public class User {
+                
+                    Integer uid;
+                    String name;
+                    String age;
+                    String sex;
+                
+                }
+
+                @Mapper
+                public interface UserMapper {
+                
+                    @Select("select * from db_user where uid = #{uid}")
+                    User getUserById(int uid);
+                
+                }
+
+                public interface UserService {
+                    User getUserById(int uid);
+                }
+
+                @Service
+                public class UserServiceImpl implements UserService {
+                
+                    @Resource
+                    private UserMapper userMapper;
                     
-                        Integer uid;
-                        String name;
-                        String age;
-                        String sex;
+                    @Override
+                    public User getUserById(int uid) {
+                        return userMapper.getUserById(uid);
+                    }
+                
+                }
+
+                @RestController
+                public class UserController {
+                
+                    @Resource
+                    private UserService userService;
                     
+                    @GetMapping("/api/user/{uid}")
+                    public User findUserById(@PathVariable("uid") Integer uid) {
+                        return userService.getUserById(uid);
                     }
 
-                    @Mapper
-                    public interface UserMapper {
-                    
-                        @Select("select * from db_user where uid = #{uid}")
-                        User getUserById(int uid);
-                    
-                    }
+                }
+```
 
-                    public interface UserService {
-                        User getUserById(int uid);
-                    }
-
-                    @Service("userService")
-                    public class UserServiceImpl implements UserService {
-                    
-                        @Resource
-                        private UserMapper userMapper;
-                        
-                        @Override
-                        public User getUserById(int uid) {
-                            return userMapper.getUserById(uid);
-                        }
-                    
-                    }
-
-                    @RestController
-                    public class UserController {
-                    
-                        @Resource
-                        private UserService userService;
-                        
-                        @GetMapping("/api/user/{uid}")
-                        public User findUserById(@PathVariable("uid") Integer uid) {
-                            return userService.getUserById(uid);
-                        }
-
-                    }
-    
 现在我们访问即可拿到数据:
 
 <img src="https://fast.itbaima.net/2023/03/06/SC9MUQxdzPmcZij.png"/>
 
 同样的方式 我们完成一下图书查询业务 注意现在是在图书管理微服务中编写(别忘了导入Mybatis依赖以及配置数据源):
 
-                    @Data
-                    public class Book {
-                    
-                        Integer bid;
-                        String title;
-                        String desc;
-                    
-                    }
+```java
+                @Data
+                public class Book {
+                
+                    Integer bid;
+                    String title;
+                    String desc;
+                
+                }
 
-                    @Mapper
-                    public interface BookMapper {
-                    
-                        @Select("select * from db_book where bid = #{bid}")
-                        Book getBookById(Integer bid);
-                    
-                    }
+                @Mapper
+                public interface BookMapper {
+                
+                    @Select("select * from db_book where bid = #{bid}")
+                    Book getBookById(Integer bid);
+                
+                }
 
-                    @Service("bookService")
-                    public class BookServiceImpl implements BookService {
-                    
-                        @Resource
-                        private BookMapper bookMapper;
-                    
-                        @Override
-                        public Book getBookById(Integer bid) {
-                            return bookMapper.getBookById(bid);
-                        }
-                    
+                @Service
+                public class BookServiceImpl implements BookService {
+                
+                    @Resource
+                    private BookMapper bookMapper;
+                
+                    @Override
+                    public Book getBookById(Integer bid) {
+                        return bookMapper.getBookById(bid);
                     }
+                
+                }
 
-                    @RestController
-                    public class BookController {
-                    
-                        @Resource
-                        private BookService bookService;
-                    
-                        @GetMapping("/api/book/{bid}")
-                        public Book findBookById(@PathVariable Integer bid) {
-                            return bookService.getBookById(bid);
-                        }
-                    
+                @RestController
+                public class BookController {
+                
+                    @Resource
+                    private BookService bookService;
+                
+                    @GetMapping("/api/book/{bid}")
+                    public Book findBookById(@PathVariable Integer bid) {
+                        return bookService.getBookById(bid);
                     }
+                
+                }
+```
 
 同样进行一下测试:
 
@@ -223,39 +235,43 @@
 
 现在我们先将借阅关联信息查询完善了:
 
-                    @Data
-                    public class Borrow {
-                    
-                        Integer id;
-                        Integer uid;
-                        Integer bid;
-                    
-                    }
+```java
+                @Data
+                public class Borrow {
+                
+                    Integer id;
+                    Integer uid;
+                    Integer bid;
+                
+                }
 
-                    @Mapper
-                    public interface BorrowMapper {
+                @Mapper
+                public interface BorrowMapper {
 
-                        @Select("select id,bid,uid from db_borrow where uid = #{uid}")
-                        List<Borrow> getBorrowByUid(Integer uid);
+                    @Select("select id,bid,uid from db_borrow where uid = #{uid}")
+                    List<Borrow> getBorrowByUid(Integer uid);
 
-                        @Select("select id,bid,uid from db_borrow where bid = #{bid}")
-                        List<Borrow> getBorrowByBid(Integer bid);
+                    @Select("select id,bid,uid from db_borrow where bid = #{bid}")
+                    List<Borrow> getBorrowByBid(Integer bid);
 
-                        @Select("select id,bid,uid from db_borrow where bid = #{bid} and uid = #{uid}")
-                        Borrow getBorrow(Integer uid, Integer bid);
+                    @Select("select id,bid,uid from db_borrow where bid = #{bid} and uid = #{uid}")
+                    Borrow getBorrow(Integer uid, Integer bid);
 
-                    }
+                }
+```
 
 现在有一个需求 需要查询用户的借阅详细信息 也就是说需要查询某个用户具体借了那些书 并且需要此用户的信息和所有已借阅的书籍信息一起返回 那么我们先来设计一下返回实体:
 
-                    @Data
-                    @AllArgsConstructor
-                    public class UserBorrowDetail {
-                    
-                        private User user;
-                        private List<Book> bookList;
-                    
-                    }
+```java
+                @Data
+                @AllArgsConstructor
+                public class UserBorrowDetail {
+                
+                    private User user;
+                    private List<Book> bookList;
+                
+                }
+```
 
 但是有一个问题 我们发现User和Book实体实际上是在另外两个微服务中定义的 相当于当前项目并没有定义这些实体类 那么怎么解决呢?
 
@@ -265,77 +281,85 @@
 
 然后只需要在对应的类中引用此项目作为依赖即可:
 
-                    <dependency>
-                        <groupId>com.example</groupId>
-                        <artifactId>commons</artifactId>
-                        <version>0.0.1-SNAPSHOT</version>
-                    </dependency>
+```xml
+                <dependency>
+                    <groupId>com.example</groupId>
+                    <artifactId>commons</artifactId>
+                    <version>0.0.1-SNAPSHOT</version>
+                </dependency>
+```
 
 之后新的公共实体类都可以在commons项目中进行定义了 现在我们接着来完成刚刚的需求 先定义接口:
 
-                    public interface BorrowService {
+```java
+                public interface BorrowService {
 
-                        UserBorrowDetail getUserBorrowDetailByUid(Integer uid);
-                    
-                    }
+                    UserBorrowDetail getUserBorrowDetailByUid(Integer uid);
+                
+                }
 
-                    @Service("borrowService")
-                    public class BorrowServiceImpl implements BorrowService {
-                    
-                        @Resource
-                        private BorrowMapper borrowMapper;
-                    
-                        @Override
-                        public UserBorrowDetail getUserBorrowDetailByUid(Integer uid) {
-                    
-                            List<Borrow> borrow = borrowMapper.getBorrowByUid(uid);
-                            // 那么问题来了 现在拿到借阅关联信息了 怎么调用其它服务获取信息呢?
-                            
-                        }
-                    
+                @Service
+                public class BorrowServiceImpl implements BorrowService {
+                
+                    @Resource
+                    private BorrowMapper borrowMapper;
+                
+                    @Override
+                    public UserBorrowDetail getUserBorrowDetailByUid(Integer uid) {
+                
+                        List<Borrow> borrow = borrowMapper.getBorrowByUid(uid);
+                        // 那么问题来了 现在拿到借阅关联信息了 怎么调用其它服务获取信息呢?
+                        
                     }
+                
+                }
+```
 
 需要进行服务远程调用我们需要用到RestTemplate来进行:
 
-                    @Service("borrowService")
-                    public class BorrowServiceImpl implements BorrowService {
-                    
-                        @Resource
-                        private BorrowMapper borrowMapper;
-                    
-                        @Override
-                        public UserBorrowDetail getUserBorrowDetailByUid(Integer uid) {
-                    
-                            List<Borrow> borrow = borrowMapper.getBorrowByUid(uid);
-                            // RestTemplate支持多种方式的远程调用
-                            RestTemplate template = new RestTemplate();
-                            // 这里通过调用getForObject来请求其它服务 并将结果自动进行封装
-                            // 获取User信息
-                            User user = template.getForObject("http://localhost:8082/api/user/" + uid, User.class);
-                            // 获取每一本书的详细信息
-                            List<Book> bookList = borrow.stream()
-                                    .map(b -> template.getForObject("http://localhost:8080/api/book/" + b.getBid(), Book.class))
-                                    .collect(Collectors.toList());
-                            return new UserBorrowDetail(user, bookList);
-                    
-                        }
-                    
+```java
+                @Service
+                public class BorrowServiceImpl implements BorrowService {
+                
+                    @Resource
+                    private BorrowMapper borrowMapper;
+                
+                    @Override
+                    public UserBorrowDetail getUserBorrowDetailByUid(Integer uid) {
+                
+                        List<Borrow> borrow = borrowMapper.getBorrowByUid(uid);
+                        // RestTemplate支持多种方式的远程调用
+                        RestTemplate template = new RestTemplate();
+                        // 这里通过调用getForObject来请求其它服务 并将结果自动进行封装
+                        // 获取User信息
+                        User user = template.getForObject("http://localhost:8082/api/user/" + uid, User.class);
+                        // 获取每一本书的详细信息
+                        List<Book> bookList = borrow.stream()
+                                .map(b -> template.getForObject("http://localhost:8080/api/book/" + b.getBid(), Book.class))
+                                .collect(Collectors.toList());
+                        return new UserBorrowDetail(user, bookList);
+                
                     }
+                
+                }
+```
 
 现在我们再最后完善一下Controller:
 
-                    @RestController
-                    public class BorrowController {
-                    
-                        @Resource
-                        private BorrowService borrowService;
-                    
-                        @GetMapping("/api/borrow/{uid}")
-                        public UserBorrowDetail getUserBorrowDetailByUid(@PathVariable("uid") Integer uid) {
-                            return borrowService.getUserBorrowDetailByUid(uid);
-                        }
-                    
+```java
+                @RestController
+                public class BorrowController {
+                
+                    @Resource
+                    private BorrowService borrowService;
+                
+                    @GetMapping("/api/borrow/{uid}")
+                    public UserBorrowDetail getUserBorrowDetailByUid(@PathVariable("uid") Integer uid) {
+                        return borrowService.getUserBorrowDetailByUid(uid);
                     }
+                
+                }
+```
 
 在数据库中添加一点借阅信息 测试看看能不能正常获取(注意: 一定要保证三个服务都处于开启状态 否则远程调用会失败):
 
@@ -359,23 +383,203 @@ Eureka能够自动注册并发现微服务 然后对服务的状态、信息进�
 那么现在我们就来搭建一个Eureka服务器 只需要创建一个新的Maven项目即可 然后我们需要在父工程中添加一下SpringCloud的依赖
 这里选用2021.0.1版本(Spring Cloud 最新的版本命名方式变更了 现在是 YEAR.x 这种命名方式 具体可以在官网查看：https://spring.io/projects/spring-cloud#learn)
 
-                    <dependency>
-                        <groupId>org.springframework.cloud</groupId>
-                        <artifactId>spring-cloud-dependencies</artifactId>
-                        <version>2021.0.1</version>
-                        <type>pom</type>
-                        <scope>import</scope>
-                    </dependency>
+```xml
+                <dependency>
+                    <groupId>org.springframework.cloud</groupId>
+                    <artifactId>spring-cloud-dependencies</artifactId>
+                    <version>2021.0.1</version>
+                    <type>pom</type>
+                    <scope>import</scope>
+                </dependency>
+```
 
 接着我们为新创建的项目添加依赖:
 
-                    <dependencies>
-                        <dependency>
-                            <groupId>org.springframework.cloud</groupId>
-                            <artifactId>spring-cloud-starter-netflix-eureka-server</artifactId>
-                        </dependency>
-                    </dependencies>
+```xml
+                <dependencies>
+                    <dependency>
+                        <groupId>org.springframework.cloud</groupId>
+                        <artifactId>spring-cloud-starter-netflix-eureka-server</artifactId>
+                    </dependency>
+                </dependencies>
+```
 
+下载内容有点多 首次导入请耐心等待一下
+
+接着我们来创建主类 还是一样的操作:
+
+```java
+                @EnableEurekaServer
+                @SpringBootApplication
+                public class EurekaServerApplication {
+                
+                    public static void main(String[] args) {
+                        SpringApplication.run(EurekaServerApplication.class, args);
+                    }
+                
+                }
+```
+
+别着急启动!!! 接着我们需要修改一下配置文件:
+
+```yaml
+                server:
+                    port: 8888
+                    
+                eureka:
+                    client: # 开启之前需要修改一下客户端设置(虽然是服务端)
+                    fetch-registry: false # 由于我们是作为服务端角色 所以不需要获取服务端 改为fasle 默认为true
+                    register-with-eureka: false # 暂时不需要将自己也注册到Eureka
+                    service-url: # 将eureka服务端指向自己
+                        defaultZone: http://localhost:8888/eureka/
+```
+
+好了 现在差不多可以启动了 启动完成后 直接输入地址+端口即可访问Eureka的管理后台:
+
+<img src="https://fast.itbaima.net/2023/03/06/4S9e3gN6ZFTuPbU.png">
+
+可以看到目前还没有任何的服务注册到Eureka 我们接着来配置一下我们的三个微服务 首先还是需要导入Eureka依赖(注意别导错了 名称里面有个starter的才是):
+
+```xml
+                <dependency>
+                    <groupId>org.springframework.cloud</groupId>
+                    <artifactId>spring-cloud-starter-netflix-eureka-server</artifactId>
+                </dependency>
+```
+
+然后修改配置文件:
+
+```yaml
+                eureka:
+                    client:
+                    service-url: # 跟上面一样 需要指向Eureka服务端地址 这样才能进行注册
+                        defaultZone: http://localhost:8888/eureka
+```
+
+OK 无需在启动类添加注解 直接启动就可以了 然后打开Eureka的服务管理页面 可以看到我们刚刚开启的服务:
+
+<img src="https://fast.itbaima.net/2023/03/06/rXnWBA1zo4OlUSt.png">
+
+可以看到8082端口上的服务器 已经成功注册到Eureka了 但是这个服务名称怎么会显示为UNKNOWN 我们需要修改一下:
+
+```yaml
+                spring:
+                    application:
+                        name: userservice
+```
+
+当我们的服务启动之后 会每隔一段时间跟Eureka发送一次心跳包 这样Eureka就能够感知到我们的服务是否处于正常运行状态
+
+现在我们用同样的方法 将另外两个微服务也注册进来:
+
+<img src="https://fast.itbaima.net/2023/03/06/gkenG9bT4aMIUio.png">
+
+那么 现在我们怎么实现服务发现呢?
+
+也就是说 我们之前如果需要对其他微服务进行远程调用 那么就必须要知道其他服务的地址:
+
+```java
+                User user = template.getForObject("http://localhost:8082/user/"+uid, User.class);
+```
+
+而现在有了Eureka之后 我们可以直接向其进行查询 得到对应的微服务地址 这里直接将服务名称替换即可:
+
+```java
+                @Service("borrowService")
+                public class BorrowServiceImpl implements BorrowService {
+                
+                    @Resource
+                    BorrowMapper mapper;
+                
+                    @Resource
+                    RestTemplate template;
+                
+                    @Override
+                    public UserBorrowDetail getUserBorrowDetailByUid(int uid) {
+
+                        List<Borrow> borrow = mapper.getBorrowsByUid(uid);
+                
+                        // 这里不用再写IP 直接写服务名称userservice
+                        User user = template.getForObject("http://userservice/user/"+uid, User.class);
+                        // 这里不用再写IP 直接写服务名称bookservice
+                        List<Book> bookList = borrow
+                                .stream()
+                                .map(b -> template.getForObject("http://bookservice/book/"+b.getBid(), Book.class))
+                                .collect(Collectors.toList());
+                        return new UserBorrowDetail(user, bookList);
+
+                    }
+
+                }
+```
+
+接着我们手动将RestTemplate声明为一个Bean 然后添加@LoadBalanced注解 这样Eureka就会对服务的调用进行自动发现 并提供负载均衡:
+
+```java
+                @Configurable
+                public class BeanConfig {
+                
+                    @Bean
+                    @LoadBalanced
+                    RestTemplate template() {
+                        return new RestTemplate();
+                    }
+                
+                }
+```
+
+现在我们就可以正常调用了:
+
+<img src="https://fast.itbaima.net/2023/03/06/1SHLTwmIK4ChdaD.png">
+
+不对啊 不是说有负载均衡的能力吗 怎么个负载均衡呢?
+
+我们先来看看 同一个服务器实际上是可以注册很多个的 但是它们的端口不同 比如我们这里创建多个用户查询服务
+我们现在将原有的端口配置修改一下 由IDEA中设定启动参数来决定 这样就可以多创建几个不同端口的启动项了:
+
+<img src="https://fast.itbaima.net/2023/03/06/ZzmGK4CuSwLVhva.png">
+
+<img src="https://fast.itbaima.net/2023/03/06/9lPAbiYntQDGNzy.png">
+
+可以看到 在Eureka中 同一个服务出现了两个实例:
+
+<img src="https://fast.itbaima.net/2023/03/06/eXGS3wdvL4RAys6.png">
+
+现在我们稍微修改一下用户查询 然后进行远程调用 看看请求是不是均匀地分配到这两个服务端:
+
+```java
+                @RestController
+                public class UserController {
+                
+                    @Resource
+                    private UserService userService;
+                
+                    @GetMapping("/api/user/{uid}")
+                    public User findUserById(@PathVariable("uid") Integer uid) {
+                
+                        System.err.println("我被调用了");
+                        return userService.getUserById(uid);
+                        
+                    }
+
+                }
+```
+
+<img src="https://fast.itbaima.net/2023/03/06/BlRf7T5iVMksb1J.png">
+
+可以看到 两个实例都能够均匀地被分配请求:
+
+<img src="https://fast.itbaima.net/2023/03/06/hysYFAeoLrnRWdX.png">
+
+<img src="https://fast.itbaima.net/2023/03/06/nDpXICZHc4L5EQm.png">
+
+这样 服务自动发现以及简单的负载均衡就实现完成了 并且 如果某个微服务挂掉了 只要存在其他同样的微服务实例在运行 那么就不会导致整个微服务不可用 极大地保证了安全性
+
+### 注册中心高可用
+各位可否想过这样的一个问题? 虽然Eureka能够实现服务注册和发现 但是如果Eureka服务器崩溃了 岂不是所有需要用到服务发现的微服务就GG了?
+
+为了避免 这种问题 我们也可以像上面那样 搭建Eureka集群 存在多个Eureka服务器，这样就算挂掉其中一个
+其他的也还在正常运行 就不会使得服务注册与发现不可用 当然 要是物理黑客直接炸了整个机房 那还是算了吧
 
 
 

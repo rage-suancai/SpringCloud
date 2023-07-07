@@ -16,9 +16,10 @@ public class UserController {
 
     @GetMapping("/api/user/{uid}")
     public User findUserById(@PathVariable("uid") Integer uid) {
+
+        System.err.println("我被调用了");
         return userService.getUserById(uid);
+
     }
-
-
 
 }
