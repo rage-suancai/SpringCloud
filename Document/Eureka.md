@@ -581,12 +581,79 @@ OK 无需在启动类添加注解 直接启动就可以了 然后打开Eureka的
 为了避免 这种问题 我们也可以像上面那样 搭建Eureka集群 存在多个Eureka服务器，这样就算挂掉其中一个
 其他的也还在正常运行 就不会使得服务注册与发现不可用 当然 要是物理黑客直接炸了整个机房 那还是算了吧
 
+<img src="https://fast.itbaima.net/2023/03/06/21izKlaCO9oNuYq.png">
 
+我们来看看如何搭建集群 这里由于机器配置不高 就搭建两个Eureka服务器组成集群 
 
+首先我们需要修改一下Eureka服务端的配置文件 这里我们创建两个配置文件:
 
+```yaml
+                server:
+                  port: 8801
+                spring:
+                  application:
+                    name: eurekaserver
+                eureka:
+                  instance:
+                    # 由于不支持多个localhost的Eureka服务器 但是又只有本地测试环境 所以就只能自定义主机名称了
+                    # 主机名称改为eureka01
+                    hostname: eureka01
+                  client:
+                    fetch-registry: false
+                    # 去掉register-with-eureka选项 让Eureka服务器自己注册到其他Eureka服务器 这样才能相互启用
+                    service-url:
+                      # 注意这里填写其他Eureka服务器的地址 不用写自己的
+                      defaultZone: http://eureka02:8802/eureka
+```
 
+```yaml
+                server:
+                  port: 8802
+                spring:
+                  application:
+                    name: eurekaserver
+                eureka:
+                  instance:
+                    hostname: eureka02
+                  client:
+                    fetch-registry: false
+                    service-url:
+                      defaultZone: http://eureka01:8801/eureka
+```
 
+这里由于我们修改成自定义的地址 需要在hosts文件中将其解析到127.0.0.1才能回到localhost
+(Mac下文件路径为: /etc/hosts Windows下为: C:\Windows\system32\drivers\etc\hosts):
 
+<img src="https://fast.itbaima.net/2023/03/06/aGdiPjeRIOfHo7p.png">
 
+对创建的两个配置文件分别添加启动配置 直接使用spring.profiles.active指定启用的配置文件即可:
 
+<img src="https://fast.itbaima.net/2023/03/06/WYhxpSvsFU8tVcR.png">
 
+接着启动这两个注册中心 这两个Eureka管理页面都可以被访问 我们访问其中一个:
+
+<img src="https://fast.itbaima.net/2023/03/06/fbGgz2dRq43DM8O.png">
+
+<img src="https://fast.itbaima.net/2023/03/06/nmD6H1BZbr7LYWC.png">
+
+可以看到下方replicas中已经包含了另一个Eureka服务器的地址 并且是可用状态
+
+接着我们需要将我们的微服务配置也进行修改:
+
+```yaml
+                    eureka:
+                        client:
+                            service-url:
+                                # 将两个Eureka的地址都加入 这样就算有一个Eureka挂掉 也能完成注册
+                                defaultZone: http://localhost:8801/eureka, http://localhost:8802/eureka
+```
+
+可以看到 服务全部成功注册 并且两个Eureka服务端都显示为已注册:
+
+<img src="https://fast.itbaima.net/2023/03/06/GDd5BVMTY1t4oQj.png">
+
+接着我们模拟一下 将其中一个Eureka服务器关闭掉 可以看到它会直接变成不可用状态:
+
+<img src="https://fast.itbaima.net/2023/03/06/8fdxB1PlqVYDRLr.png">
+
+当然 如果这个时候我们重启刚刚关闭的Eureka服务器 会自动同步其他Eureka服务器的数据
