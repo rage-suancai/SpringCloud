@@ -269,15 +269,26 @@ Hystrix也可以配合Feign进行降级 我们可以对应接口中定义的远�
 
 接着我们打开刚刚启动的管理页面 地址为：http://localhost:8900/hystrix/
 
-<img src="">
+<img src="https://fast.itbaima.net/2023/03/06/5rbCxLtR1e8DZAu.png">
 
+在中间填写要监控的服务: 比如加阅服务: http://localhost:8081/actuator/hystrix.stream 注意后面要添加`/actuator/hystrix.stream` 然后点击Monitor Stream即可进入监控页面:
 
+<img src="https://fast.itbaima.net/2023/03/06/iRT6cva5jfd7JSK.png">
 
+可以看到现在都是Loading状态 这是因为还没有开始统计 我们现在尝试调用几次我们的服务:
 
+<img src="https://fast.itbaima.net/2023/03/06/evLyDl8gVxboiap.png">
 
+可以看到 在调用之后 监控页面出现了信息:
 
+<img src="https://fast.itbaima.net/2023/03/06/UtcOjEfdnMGQ7ge.png">
 
+可以看到5次访问都是正常的 所以显示为绿色 接着我们来尝试将图书服务关闭 这样就会导致服务降级甚至熔断 然后再多次访问此服务看看监控会如何变化:
 
+<img src="https://fast.itbaima.net/2023/03/06/97by1FDirquwtv2.png">
 
+可以看到，错误率直接飙升到100% 并且一段时间内持续出现错误 中心的圆圈也变成了红色 我们继续进行访问:
 
+<img src="https://fast.itbaima.net/2023/03/06/mrVf1qSsDXioIBc.png">
 
+在出现大量错误的情况下保持持续访问 可以看到此时已将服务熔断 Circuit更改为Open状态 并且图中的圆圈也变得更大 表示压力在持续上升

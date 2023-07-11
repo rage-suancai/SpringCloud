@@ -76,7 +76,7 @@ LoadBalancer默认提供了两种负载均衡策略:
 现在我们希望修改默认的负载均衡策略 可以进行指定 比如我们现在希望用户服务采用随机分配策略 我们需要先创建随机分配策略的配置类(不用加@Configuration):
 
 ```java
-                    public class LoadBalancerConfig {
+                    public class BalancerConfig {
                         // 将官方提供的 RandomLoadBalancer 注册为Bean
                         @Bean
                         public ReactorLoadBalancer<ServiceInstance> randomLoadBalancer(Environment environment, LoadBalancerClientFactory loadBalancerClientFactory){

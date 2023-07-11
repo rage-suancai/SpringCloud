@@ -23,6 +23,7 @@
         <module>commons</module>
         <module>eureka-server</module>
         <module>hystrix-Dashboard</module>
+        <module>gateway-server</module>
     </modules>
 
     <properties>
