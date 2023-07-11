@@ -17,6 +17,7 @@ public class TestFilter implements GlobalFilter, Ordered {
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
 
         ServerHttpRequest request = exchange.getRequest();
+        System.out.println(request.getQueryParams().get("Test"));
         System.out.println(request.getQueryParams());
 
         List<String> value = request.getQueryParams().get("test");

@@ -18,7 +18,7 @@ public class BookController {
     @GetMapping("/api/book/{bid}")
     public Book findBookById(@PathVariable Integer bid, HttpServletRequest request) {
 
-        // System.err.println(request.getHeader("Test"));
+        System.err.println(request.getHeader("Test"));
         return bookService.getBookById(bid);
 
     }

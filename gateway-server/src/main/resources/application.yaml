@@ -23,8 +23,8 @@ spring:
         uri: lb://bookservice
         predicates:
         - Path=/api/book/**
-#        filters:
-#        - AddRequestHeader=Test, Hello Gateway😸
+        filters:
+        - AddRequestHeader=Test, Hello Gateway😸
 
 
 

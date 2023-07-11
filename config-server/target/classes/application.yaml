@@ -1,0 +1,19 @@
+server:
+  port: 8700
+
+spring:
+  application:
+    name: configserver
+  cloud:
+    config:
+      server:
+        git:
+          uri: file://D:/code-software/jar gather/JAVA-exploitation/Git/Local repository
+          default-label: master
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8801/eureka, http://localhost:8802/eureka
+
+
